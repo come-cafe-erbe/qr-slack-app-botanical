@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QRコード読み取り & Slack連携アプリ</title>
+    <link rel="stylesheet" href="css/botanical-theme.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+<body>
+    <header>
+        <div class="logo-container">
+            <h1>QRコード読み取り & Slack連携アプリ</h1>
+        </div>
+        <button id="settingsButton" class="btn settings-btn"><i class="fas fa-cog"></i></button>
+    </header>
+
+    <div class="page-container">
+        <!-- ホーム画面 -->
+        <div id="homePage" class="page home-page active">
+            <div class="leaf-decoration leaf-top-right"></div>
+            <div class="leaf-decoration leaf-bottom-left"></div>
+            
+            <div class="home-content">
+                <h2 class="home-title">QRコード読み取り & Slack連携</h2>
+                <p class="home-subtitle">トレイのQRコードをスキャンして、画像と情報をSlackに送信します</p>
+                <button id="startScanButton" class="btn btn-large pulse">QRコードをスキャンする</button>
+            </div>
+        </div>
+
+        <!-- QR読み取り画面 -->
+        <div id="scanPage" class="page">
+            <button id="backToHomeButton" class="btn back-btn"><i class="fas fa-arrow-left"></i> 戻る</button>
+            
+            <h2>QRコードをスキャンしてください</h2>
+            
+            <div class="camera-container">
+                <div class="camera-view">
+                    <!-- 実際の実装ではここにvideo要素が入ります -->
+                    <div style="width: 100%; height: 100%; background-color: #000; display: flex; justify-content: center; align-items: center; color: white;">
+                        カメラプレビュー
+                    </div>
+                    
+                    <div class="camera-overlay">
+                        <div class="qr-frame">
+                            <div class="qr-corner qr-corner-tl"></div>
+                            <div class="qr-corner qr-corner-tr"></div>
+                            <div class="qr-corner qr-corner-bl"></div>
+                            <div class="qr-corner qr-corner-br"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="result-display" id="qrResult" style="display: none;">
+                QRコード情報: 注文ID: 12345, トークン: ABC123
+            </div>
+        </div>
+
+        <!-- トレイ撮影画面 -->
+        <div id="capturePage" class="page">
+            <button id="backToScanButton" class="btn back-btn"><i class="fas fa-arrow-left"></i> 戻る</button>
+            
+            <h2>トレイを撮影してください</h2>
+            
+            <div class="result-display">
+                QRコード情報: 注文ID: 12345, トークン: ABC123
+            </div>
+            
+            <div class="camera-container">
+                <div class="camera-view">
+                    <!-- 実際の実装ではここにvideo要素が入ります -->
+                    <div style="width: 100%; height: 100%; background-color: #000; display: flex; justify-content: center; align-items: center; color: white;">
+                        カメラプレビュー
+                    </div>
+                </div>
+            </div>
+            
+            <button id="captureButton" class="btn btn-large btn-light pulse">
+                <i class="fas fa-camera"></i> トレイを撮影
+            </button>
+        </div>
+
+        <!-- 確認画面 -->
+        <div id="confirmPage" class="page">
+            <button id="backToCaptureButton" class="btn back-btn"><i class="fas fa-arrow-left"></i> 戻る</button>
+            
+            <h2>送信内容を確認してください</h2>
+            
+            <div class="result-display">
+                QRコード情報: 注文ID: 12345, トークン: ABC123
+            </div>
+            
+            <div class="camera-container">
+                <div class="camera-view" style="background-color: #333; display: flex; justify-content: center; align-items: center; color: white;">
+                    撮影画像プレビュー
+                </div>
+            </div>
+            
+            <div style="display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 600px;">
+                <button id="sendButton" class="btn btn-large">
+                    <i class="fab fa-slack"></i> Slackに送信
+                </button>
+                <button id="sendTextOnlyButton" class="btn btn-accent">
+                    <i class="fas fa-comment-alt"></i> テキストのみ送信
+                </button>
+                <button id="retakeButton" class="btn btn-light">
+                    <i class="fas fa-redo"></i> 撮り直す
+                </button>
+            </div>
+        </div>
+
+        <!-- 完了画面 -->
+        <div id="completionPage" class="page completion-page">
+            <div class="completion-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="completion-message">送信が完了しました！</div>
+            
+            <div class="completion-details">
+                <p><strong>送信内容:</strong></p>
+                <p>QRコード情報: 注文ID: 12345, トークン: ABC123</p>
+                <p>トレイ画像が添付されています</p>
+                <p><strong>送信先:</strong> #general</p>
+            </div>
+            
+            <div class="countdown">3秒後にホーム画面に戻ります...</div>
+            
+            <button id="backToHomeFromCompletionButton" class="btn">
+                <i class="fas fa-home"></i> ホームに戻る
+            </button>
+        </div>
+    </div>
+
+    <!-- 設定モーダル -->
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>設定</h2>
+            <div class="form-group">
+                <label for="botToken">Bot Token</label>
+                <input type="text" id="botToken" placeholder="xoxb-...">
+            </div>
+            <div class="form-group">
+                <label for="channelId">チャンネルID</label>
+                <input type="text" id="channelId" placeholder="C...">
+            </div>
+            <div class="form-group">
+                <label for="proxyUrl">プロキシURL</label>
+                <input type="text" id="proxyUrl" placeholder="https://...">
+            </div>
+            <button id="saveSettings" class="btn">保存</button>
+            <div id="settingsStatus" class="status-message"></div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // ページ要素
+            const homePage = document.getElementById('homePage');
+            const scanPage = document.getElementById('scanPage');
+            const capturePage = document.getElementById('capturePage');
+            const confirmPage = document.getElementById('confirmPage');
+            const completionPage = document.getElementById('completionPage');
+            
+            // ボタン要素
+            const startScanButton = document.getElementById('startScanButton');
+            const backToHomeButton = document.getElementById('backToHomeButton');
+            const backToScanButton = document.getElementById('backToScanButton');
+            const backToCaptureButton = document.getElementById('backToCaptureButton');
+            const captureButton = document.getElementById('captureButton');
+            const sendButton = document.getElementById('sendButton');
+            const sendTextOnlyButton = document.getElementById('sendTextOnlyButton');
+            const retakeButton = document.getElementById('retakeButton');
+            const backToHomeFromCompletionButton = document.getElementById('backToHomeFromCompletionButton');
+            
+            // 設定モーダル要素
+            const settingsButton = document.getElementById('settingsButton');
+            const settingsModal = document.getElementById('settingsModal');
+            const closeButton = document.querySelector('.close');
+            
+            // QR結果表示
+            const qrResult = document.getElementById('qrResult');
+            
+            // ページ遷移関数
+            function navigateTo(fromPage, toPage) {
+                fromPage.classList.remove('active');
+                fromPage.classList.add('previous');
+                
+                setTimeout(() => {
+                    toPage.classList.add('active');
+                    
+                    // 少し遅れて前のページのクラスをリセット
+                    setTimeout(() => {
+                        fromPage.classList.remove('previous');
+                        fromPage.style.transform = 'translateX(100%)';
+                        
+                        // さらに少し遅れて元の位置に戻す
+                        setTimeout(() => {
+                            fromPage.style.transform = '';
+                        }, 50);
+                    }, 500);
+                }, 50);
+            }
+            
+            // ホーム → スキャン
+            startScanButton.addEventListener('click', function() {
+                navigateTo(homePage, scanPage);
+                
+                // デモ用: 3秒後にQRコード検出をシミュレート
+                setTimeout(() => {
+                    qrResult.style.display = 'block';
+                    
+                    // さらに1秒後に自動的に次の画面へ
+                    setTimeout(() => {
+                        navigateTo(scanPage, capturePage);
+                    }, 1000);
+                }, 3000);
+            });
+            
+            // スキャン → ホーム
+            backToHomeButton.addEventListener('click', function() {
+                navigateTo(scanPage, homePage);
+                qrResult.style.display = 'none';
+            });
+            
+            // 撮影 → スキャン
+            backToScanButton.addEventListener('click', function() {
+                navigateTo(capturePage, scanPage);
+            });
+            
+            // 撮影 → 確認
+            captureButton.addEventListener('click', function() {
+                navigateTo(capturePage, confirmPage);
+            });
+            
+            // 確認 → 撮影
+            backToCaptureButton.addEventListener('click', function() {
+                navigateTo(confirmPage, capturePage);
+            });
+            
+            // 確認 → 撮影 (撮り直し)
+            retakeButton.addEventListener('click', function() {
+                navigateTo(confirmPage, capturePage);
+            });
+            
+            // 確認 → 完了
+            sendButton.addEventListener('click', function() {
+                navigateTo(confirmPage, completionPage);
+                
+                // 3秒カウントダウン後にホームに戻る
+                let count = 3;
+                const countdown = document.querySelector('.countdown');
+                
+                const timer = setInterval(() => {
+                    count--;
+                    countdown.textContent = `${count}秒後にホーム画面に戻ります...`;
+                    
+                    if (count <= 0) {
+                        clearInterval(timer);
+                        navigateTo(completionPage, homePage);
+                    }
+                }, 1000);
+            });
+            
+            // テキストのみ送信も同じ動作
+            sendTextOnlyButton.addEventListener('click', function() {
+                navigateTo(confirmPage, completionPage);
+                
+                // 3秒カウントダウン後にホームに戻る
+                let count = 3;
+                const countdown = document.querySelector('.countdown');
+                
+                const timer = setInterval(() => {
+                    count--;
+                    countdown.textContent = `${count}秒後にホーム画面に戻ります...`;
+                    
+                    if (count <= 0) {
+                        clearInterval(timer);
+                        navigateTo(completionPage, homePage);
+                    }
+                }, 1000);
+            });
+            
+            // 完了 → ホーム
+            backToHomeFromCompletionButton.addEventListener('click', function() {
+                navigateTo(completionPage, homePage);
+            });
+            
+            // 設定モーダル
+            settingsButton.addEventListener('click', function() {
+                settingsModal.style.display = 'block';
+            });
+            
+            closeButton.addEventListener('click', function() {
+                settingsModal.style.display = 'none';
+            });
+            
+            window.addEventListener('click', function(event) {
+                if (event.target === settingsModal) {
+                    settingsModal.style.display = 'none';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

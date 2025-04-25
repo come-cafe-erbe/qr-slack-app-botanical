@@ -1,0 +1,502 @@
+/* QRコード読み取り & Slack連携アプリ - ボタニカルテーマ */
+
+/* 新しいカラースキーム - アース・ボタニカル */
+:root {
+  --main-color: #2E7D32;      /* 深い緑 - メインカラー */
+  --accent-color: #795548;    /* 温かみのある茶色 - アクセント */
+  --bg-color: #F5F3E6;        /* ソフトなベージュ - 背景 */
+  --light-accent: #AED581;    /* 淡い黄緑 - アクセント */
+  --text-color: #33291F;      /* ダークブラウン - 読みやすさ重視 */
+  --success-color: #4CAF50;   /* 緑 - 成功メッセージ用 */
+  --error-color: #F44336;     /* 赤 - エラーメッセージ用 */
+  --info-color: #2196F3;      /* 青 - 情報メッセージ用 */
+  --light-color: #FFFFFF;     /* 白 - コントラスト用 */
+  --shadow-color: rgba(0, 0, 0, 0.1); /* 影の色 */
+}
+
+/* 全体のスタイル */
+body {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* ヘッダー */
+header {
+  background-color: var(--main-color);
+  color: white;
+  padding: 15px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 5px var(--shadow-color);
+  position: relative;
+  z-index: 10;
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+}
+
+.logo {
+  height: 40px;
+  margin-right: 15px;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 500;
+}
+
+/* ページコンテナ */
+.page-container {
+  position: relative;
+  width: 100%;
+  height: calc(100vh - 70px); /* ヘッダーの高さを引く */
+  overflow: hidden;
+}
+
+/* 各ページ */
+.page {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  padding: 20px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  transition: transform 0.5s ease, opacity 0.5s ease;
+  background-color: var(--bg-color);
+  overflow-y: auto;
+  transform: translateX(100%);
+  opacity: 0;
+}
+
+.page.active {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.page.previous {
+  transform: translateX(-100%);
+  opacity: 0;
+}
+
+/* ホームページ特有のスタイル */
+.home-page {
+  justify-content: center;
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><path d="M30,10 C15,30 35,30 20,50 C5,70 25,70 10,90" stroke="%23AED581" fill="none" stroke-width="2"/><path d="M70,10 C55,30 75,30 60,50 C45,70 65,70 50,90" stroke="%23AED581" fill="none" stroke-width="2"/></svg>');
+  background-size: 300px;
+  background-repeat: repeat;
+  background-position: center;
+}
+
+.home-content {
+  background-color: rgba(245, 243, 230, 0.9);
+  padding: 40px;
+  border-radius: 15px;
+  text-align: center;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  max-width: 600px;
+  width: 90%;
+}
+
+.home-title {
+  color: var(--main-color);
+  font-size: 32px;
+  margin-bottom: 20px;
+}
+
+.home-subtitle {
+  color: var(--accent-color);
+  font-size: 18px;
+  margin-bottom: 40px;
+}
+
+/* ボタンスタイル */
+.btn {
+  background-color: var(--main-color);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 15px 25px;
+  font-size: 18px;
+  cursor: pointer;
+  min-width: 200px;
+  min-height: 60px;
+  margin: 10px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 5px var(--shadow-color);
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.btn:hover {
+  background-color: #1B5E20;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px var(--shadow-color);
+}
+
+.btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 3px var(--shadow-color);
+}
+
+.btn:disabled {
+  background-color: #CCCCCC;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.btn-large {
+  font-size: 22px;
+  min-width: 250px;
+  min-height: 70px;
+}
+
+.btn-accent {
+  background-color: var(--accent-color);
+}
+
+.btn-accent:hover {
+  background-color: #5D4037;
+}
+
+.btn-light {
+  background-color: var(--light-accent);
+  color: var(--text-color);
+}
+
+.btn-light:hover {
+  background-color: #9CCC65;
+}
+
+.settings-btn {
+  background-color: transparent;
+  border: 2px solid white;
+  min-width: auto;
+  padding: 8px 15px;
+}
+
+.settings-btn:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.back-btn {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  min-width: auto;
+  padding: 10px 15px;
+  font-size: 16px;
+  background-color: var(--accent-color);
+}
+
+/* カメラビューとプレビュー */
+.camera-container {
+  width: 100%;
+  max-width: 600px;
+  margin: 20px auto;
+  position: relative;
+}
+
+.camera-view {
+  width: 100%;
+  height: 0;
+  padding-bottom: 75%; /* 4:3のアスペクト比 */
+  background-color: #000;
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 4px 10px var(--shadow-color);
+  border: 3px solid var(--main-color);
+}
+
+.camera-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.qr-frame {
+  width: 70%;
+  height: 70%;
+  border: 2px solid rgba(255, 255, 255, 0.7);
+  position: relative;
+}
+
+.qr-corner {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-color: white;
+  border-style: solid;
+  border-width: 0;
+}
+
+.qr-corner-tl {
+  top: 0;
+  left: 0;
+  border-top-width: 4px;
+  border-left-width: 4px;
+}
+
+.qr-corner-tr {
+  top: 0;
+  right: 0;
+  border-top-width: 4px;
+  border-right-width: 4px;
+}
+
+.qr-corner-bl {
+  bottom: 0;
+  left: 0;
+  border-bottom-width: 4px;
+  border-left-width: 4px;
+}
+
+.qr-corner-br {
+  bottom: 0;
+  right: 0;
+  border-bottom-width: 4px;
+  border-right-width: 4px;
+}
+
+/* 結果表示 */
+.result-display {
+  background-color: rgba(46, 125, 50, 0.1);
+  border-left: 4px solid var(--main-color);
+  padding: 15px;
+  margin: 15px 0;
+  border-radius: 4px;
+  width: 100%;
+  max-width: 600px;
+}
+
+/* ステータスメッセージ */
+.status-message {
+  padding: 15px;
+  margin: 15px 0;
+  border-radius: 8px;
+  font-weight: 500;
+  display: none;
+  width: 100%;
+  max-width: 600px;
+}
+
+.status-message.success {
+  background-color: rgba(76, 175, 80, 0.1);
+  border-left: 4px solid var(--success-color);
+  color: var(--success-color);
+}
+
+.status-message.error {
+  background-color: rgba(244, 67, 54, 0.1);
+  border-left: 4px solid var(--error-color);
+  color: var(--error-color);
+}
+
+.status-message.info {
+  background-color: rgba(33, 150, 243, 0.1);
+  border-left: 4px solid var(--info-color);
+  color: var(--info-color);
+}
+
+/* 完了画面 */
+.completion-page {
+  justify-content: center;
+  text-align: center;
+}
+
+.completion-icon {
+  font-size: 80px;
+  color: var(--success-color);
+  margin-bottom: 20px;
+}
+
+.completion-message {
+  font-size: 24px;
+  color: var(--main-color);
+  margin-bottom: 20px;
+}
+
+.completion-details {
+  background-color: rgba(46, 125, 50, 0.1);
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 30px;
+  text-align: left;
+  width: 100%;
+  max-width: 500px;
+}
+
+.countdown {
+  font-size: 18px;
+  color: var(--accent-color);
+  margin-top: 20px;
+}
+
+/* モーダル */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+  background-color: var(--light-color);
+  margin: 10% auto;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  width: 80%;
+  max-width: 600px;
+  position: relative;
+}
+
+.close {
+  position: absolute;
+  right: 20px;
+  top: 15px;
+  font-size: 28px;
+  font-weight: bold;
+  color: #aaa;
+  cursor: pointer;
+}
+
+.close:hover {
+  color: var(--text-color);
+}
+
+.modal h2 {
+  color: var(--main-color);
+  border-bottom: 2px solid var(--light-accent);
+  padding-bottom: 10px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: var(--accent-color);
+}
+
+.form-group input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 16px;
+  box-sizing: border-box;
+}
+
+.form-group input:focus {
+  border-color: var(--main-color);
+  outline: none;
+  box-shadow: 0 0 5px rgba(46, 125, 50, 0.3);
+}
+
+/* アニメーション */
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+.pulse {
+  animation: pulse 2s infinite;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.fade-in {
+  animation: fadeIn 0.5s ease-in;
+}
+
+/* レスポンシブデザイン - iPadに最適化 */
+@media (max-width: 1024px) {
+  .btn {
+    padding: 15px 20px;
+    font-size: 16px;
+    min-width: 180px;
+  }
+  
+  header h1 {
+    font-size: 20px;
+  }
+  
+  .home-title {
+    font-size: 28px;
+  }
+  
+  .home-subtitle {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .btn {
+    width: 80%;
+    margin: 8px 0;
+  }
+  
+  .home-content {
+    padding: 30px;
+  }
+  
+  .camera-view {
+    padding-bottom: 100%; /* 正方形に近い比率 */
+  }
+}
+
+/* 植物モチーフの装飾 */
+.leaf-decoration {
+  position: absolute;
+  width: 100px;
+  height: 100px;
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><path d="M50,10 C70,30 70,70 50,90 C30,70 30,30 50,10 Z" fill="%23AED581" opacity="0.3"/></svg>');
+  background-size: contain;
+  background-repeat: no-repeat;
+  z-index: -1;
+}
+
+.leaf-top-right {
+  top: 20px;
+  right: 20px;
+  transform: rotate(45deg);
+}
+
+.leaf-bottom-left {
+  bottom: 20px;
+  left: 20px;
+  transform: rotate(-45deg);
+}
